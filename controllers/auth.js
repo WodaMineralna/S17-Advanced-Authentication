@@ -56,3 +56,11 @@ exports.postSignup = async (req, res, next) => {
   }
   return res.redirect("/");
 };
+
+exports.getResetPassword = (req, res, next) => {
+  res.render("auth/reset-password", {
+    path: "/reset-password",
+    pageTitle: "Reset Password",
+    errorMessage: req.flash("error"),
+  });
+};
