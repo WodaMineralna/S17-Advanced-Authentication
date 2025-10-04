@@ -14,4 +14,6 @@ router.get("/signup", authController.getSignup);
 
 router.post("/signup", catchErrAsync(authController.postSignup));
 
+router.get("/reset-password", authController.getResetPassword);
+
 module.exports = router;
