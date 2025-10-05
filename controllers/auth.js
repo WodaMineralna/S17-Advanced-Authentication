@@ -1,4 +1,4 @@
-const { loginUser, singupUser } = require("../models/auth");
+const { loginUser, singupUser, resetPassword } = require("../models/auth");
 
 const newError = require("../utils/newError");
 
@@ -63,4 +63,15 @@ exports.getResetPassword = (req, res, next) => {
     pageTitle: "Reset Password",
     errorMessage: req.flash("error"),
   });
+};
+
+exports.postResetPassword = async (req, res, next) => {
+  const { email } = req.body;
+  const matchingUser = await resetPassword(email);
+
+  if (matchingUser === false) {
+    req.flash("error", "No email found. Please provide a valid email adress.");
+    return res.redirect("/reset-password");
+  }
+  return res.redirect("/reset-password"); // ! WILL BE CHANGED TO /login   with some indicator that an email was set!
 };

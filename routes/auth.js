@@ -16,4 +16,6 @@ router.post("/signup", catchErrAsync(authController.postSignup));
 
 router.get("/reset-password", authController.getResetPassword);
 
+router.post("/reset-password", catchErrAsync(authController.postResetPassword))
+
 module.exports = router;
