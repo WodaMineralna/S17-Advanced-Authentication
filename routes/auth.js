@@ -18,4 +18,9 @@ router.get("/reset-password", authController.getResetPassword);
 
 router.post("/reset-password", catchErrAsync(authController.postResetPassword));
 
+router.get(
+  "/reset-password/:token",
+  catchErrAsync(authController.getResetPasswordForm)
+);
+
 module.exports = router;
