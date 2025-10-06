@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 
 const User = require("./user");
 
+const { isEmpty, isMatching, comparePasswords } = require("../utils/validate");
 const newError = require("../utils/newError");
 const sendEmail = require("../utils/sendEmail");
 const required = require("../utils/requireEnvVar");
@@ -14,7 +15,7 @@ async function loginUser(userData) {
     const foundUser = await User.findOne({ email });
     if (!foundUser) return false;
 
-    const doMatch = await bcrypt.compare(password, foundUser.password);
+    const doMatch = await comparePasswords(password, foundUser.password);
     if (!doMatch) return false;
 
     return foundUser;
