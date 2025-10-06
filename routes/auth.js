@@ -23,4 +23,9 @@ router.get(
   catchErrAsync(authController.getResetPasswordForm)
 );
 
+router.post(
+  "/update-password",
+  catchErrAsync(authController.postResetPasswordForm)
+);
+
 module.exports = router;

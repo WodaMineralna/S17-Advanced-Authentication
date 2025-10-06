@@ -3,6 +3,7 @@ const {
   singupUser,
   resetPassword,
   validateToken,
+  updatePassword,
 } = require("../models/auth");
 
 const newError = require("../utils/newError");
@@ -102,4 +103,23 @@ exports.getResetPasswordForm = async (req, res, next) => {
   });
 };
 
+exports.postResetPasswordForm = async (req, res, next) => {
+  const { password, confirmPassword, userId } = req.body;
+  const [didSucceed, message] = await updatePassword({
+    password,
+    confirmPassword,
+    userId,
+  });
+
+  message || "No message";
+
+  if (didSucceed === false) {
+    req.flash("error", message);
+    return res.redirect(req.get("Referer") || "/");
+  }
+
+  if (didSucceed === true) {
+    req.flash("info", message);
+    return res.redirect("/login");
+  }
 };

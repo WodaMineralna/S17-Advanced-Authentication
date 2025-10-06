@@ -112,10 +112,42 @@ async function validateToken(token) {
   }
 }
 
+// * reads userId from hidden input value, checks DB for matching _id and updates password
+async function updatePassword(formData) {
+  const { password, confirmPassword, userId } = formData;
+
+  if (
+    isEmpty([password, confirmPassword]) ||
+    !isMatching(password, confirmPassword)
+  )
+    return [false, "Passwords cannot be empty and must match"];
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return [false, "Invalid userId"];
+
+    const doMatch = await comparePasswords(password, user.password);
+    if (doMatch)
+      return [
+        false,
+        "Your new password cannot be the same as your previous password",
+      ];
+
+    const hashedPwd = await bcrypt.hash(password, 12);
+    user.password = hashedPwd;
+    user.resetPasswordToken = undefined;
+    await user.save();
+
+    return [true, "Password updated succesfully!"];
+  } catch (error) {
+    throw newError("Could not update password", error);
+  }
+}
 
 module.exports = {
   loginUser,
   singupUser,
   resetPassword,
   validateToken,
+  updatePassword,
 };
