@@ -1,4 +1,9 @@
-const { loginUser, singupUser, resetPassword } = require("../models/auth");
+const {
+  loginUser,
+  singupUser,
+  resetPassword,
+  validateToken,
+} = require("../models/auth");
 
 const newError = require("../utils/newError");
 
@@ -79,4 +84,22 @@ exports.postResetPassword = async (req, res, next) => {
     return res.redirect("/login");
   }
 };
+
+exports.getResetPasswordForm = async (req, res, next) => {
+  const token = req.params.token;
+  const matchingUserId = await validateToken(token);
+
+  if (matchingUserId === false) {
+    req.flash("error", "Invalid or expired password reset link.");
+    return res.redirect("/login");
+  }
+
+  return res.render("auth/form-reset-password", {
+    path: "/form-reset-password",
+    pageTitle: "Reset Password Form",
+    errorMessage: req.flash("error"),
+    userId: matchingUserId,
+  });
+};
+
 };

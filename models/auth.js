@@ -94,4 +94,28 @@ async function resetPassword(email) {
   });
 }
 
-module.exports = { loginUser, singupUser, resetPassword };
+// * looks for req.query.token in DB and returns matching user._id if token was found and not expired
+async function validateToken(token) {
+  // console.log("resetPassword token:", token); // DEBUGGING
+  try {
+    const matchingUserId = await User.findOne({
+      "resetPasswordToken.token": token,
+      "resetPasswordToken.expiresAt": { $gt: Date.now() },
+    });
+    if (!matchingUserId) return false;
+    // console.log("matchingUserId based on resetPassword token: ", matchingUserId); // DEBUGGING
+
+    const userId = matchingUserId._id;
+    return userId;
+  } catch (error) {
+    throw newError("Could not validate reset password token", error);
+  }
+}
+
+
+module.exports = {
+  loginUser,
+  singupUser,
+  resetPassword,
+  validateToken,
+};
