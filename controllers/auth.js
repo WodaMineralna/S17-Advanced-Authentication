@@ -7,6 +7,7 @@ exports.getLogin = (req, res, next) => {
     path: "/login",
     pageTitle: "Login",
     errorMessage: req.flash("error"),
+    infoMessage: req.flash("info"),
   });
 };
 
@@ -73,5 +74,9 @@ exports.postResetPassword = async (req, res, next) => {
     req.flash("error", "No email found. Please provide a valid email adress.");
     return res.redirect("/reset-password");
   }
-  return res.redirect("/reset-password"); // ! WILL BE CHANGED TO /login   with some indicator that an email was set!
+  if (matchingUser === true) {
+    req.flash("info", "Email was sent. Check your inbox!");
+    return res.redirect("/login");
+  }
+};
 };
