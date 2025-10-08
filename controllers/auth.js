@@ -8,6 +8,8 @@ const {
 
 const newError = require("../utils/newError");
 
+const PLACEHOLDER_MESSAGE = "Something went wrong...";
+
 exports.getLogin = (req, res, next) => {
   res.render("auth/login", {
     path: "/login",
@@ -19,12 +21,17 @@ exports.getLogin = (req, res, next) => {
 
 exports.postLogin = async (req, res, next) => {
   const { email, password } = req.body;
-  const user = await loginUser({ email, password });
+  const {
+    didSucceed,
+    message = PLACEHOLDER_MESSAGE,
+    user,
+  } = await loginUser({ email, password });
 
-  if (!user) {
-    req.flash("error", "Invalid email or password.");
+  if (!didSucceed) {
+    req.flash("error", message);
     return res.redirect("/login");
-  } else {
+  }
+  if (didSucceed) {
     req.session.user = user;
     req.session.loggedIn = true;
     req.session.save((err) => {
@@ -52,16 +59,20 @@ exports.getSignup = (req, res, next) => {
 // ! VALIDATION will be implemented during course section S18 - Understanding Validation
 exports.postSignup = async (req, res, next) => {
   const { email, password, confirmPassword } = req.body;
-  const userExists = await singupUser({ email, password, confirmPassword });
+  const { didSucceed, message = PLACEHOLDER_MESSAGE } = await singupUser({
+    email,
+    password,
+    confirmPassword,
+  });
 
-  if (userExists === true) {
-    req.flash(
-      "error",
-      "Email already in use. Please provide different email adress."
-    );
+  if (!didSucceed) {
+    req.flash("error", message);
     return res.redirect("/signup");
   }
-  return res.redirect("/");
+  if (didSucceed) {
+    req.flash("info", message);
+    return res.redirect("/login");
+  }
 };
 
 exports.getResetPassword = (req, res, next) => {
@@ -74,52 +85,58 @@ exports.getResetPassword = (req, res, next) => {
 
 exports.postResetPassword = async (req, res, next) => {
   const { email } = req.body;
-  const matchingUser = await resetPassword(email);
+  const { didSucceed, message = PLACEHOLDER_MESSAGE } = await resetPassword(
+    email
+  );
 
-  if (matchingUser === false) {
-    req.flash("error", "No email found. Please provide a valid email adress.");
+  if (!didSucceed) {
+    req.flash("error", message);
     return res.redirect("/reset-password");
   }
-  if (matchingUser === true) {
-    req.flash("info", "Email was sent. Check your inbox!");
+  if (didSucceed) {
+    req.flash("info", message);
     return res.redirect("/login");
   }
 };
 
 exports.getResetPasswordForm = async (req, res, next) => {
   const token = req.params.token;
-  const { matchingUserId } = await validateToken(token);
+  const { didSucceed, message = PLACEHOLDER_MESSAGE } = await validateToken(
+    token
+  );
 
-  if (matchingUserId === false) {
-    req.flash("error", "Invalid or expired password reset link");
+  if (!didSucceed) {
+    req.flash("error", message);
     return res.redirect("/login");
   }
-
-  return res.render("auth/form-reset-password", {
-    path: "/form-reset-password",
-    pageTitle: "Reset Password Form",
-    errorMessage: req.flash("error"),
-    token,
-  });
+  if (didSucceed) {
+    return res.render("auth/form-reset-password", {
+      path: "/form-reset-password",
+      pageTitle: "Reset Password Form",
+      errorMessage: req.flash("error"),
+      token,
+    });
+  }
 };
 
 exports.postResetPasswordForm = async (req, res, next) => {
   const { password, confirmPassword, token } = req.body;
-  const [didSucceed, message, toLogin] = await updatePassword({
+  const {
+    didSucceed,
+    message = PLACEHOLDER_MESSAGE,
+    toLoginPage,
+  } = await updatePassword({
     password,
     confirmPassword,
     token,
   });
 
-  message || "No message";
-
-  if (didSucceed === false) {
+  if (!didSucceed) {
     req.flash("error", message);
-    if (toLogin === true) return res.redirect("/login");
+    if (toLoginPage) return res.redirect("/login");
     return res.redirect(req.get("Referer") || "/");
   }
-
-  if (didSucceed === true) {
+  if (didSucceed) {
     req.flash("info", message);
     return res.redirect("/login");
   }
