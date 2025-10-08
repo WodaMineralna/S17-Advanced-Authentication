@@ -27,16 +27,15 @@ exports.getEditProduct = async (req, res, next) => {
 exports.postEditProduct = async (req, res, next) => {
   const id = req.body.productId;
   const { title, price, description, imageUrl } = req.body;
-  const product = await Product.editProductById(
+  await Product.editProductById(
     id,
     title,
     price,
     description,
-    imageUrl
+    imageUrl,
+    req.user._id
   );
 
-  console.log("controllers/admin.js | Edited productId: ", id); // DEBUGGING
-  await product.save();
   res.redirect("/");
 };
 
@@ -64,6 +63,6 @@ exports.postAddProduct = async (req, res, next) => {
 
 exports.postDeleteProduct = async (req, res, next) => {
   const id = req.body.productId;
-  await Product.deleteProduct(id);
+  await Product.deleteProduct(id, req.user._id);
   res.redirect("/admin/products");
 };

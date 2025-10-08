@@ -28,17 +28,18 @@ productSchema.statics.editProductById = async function (
   title,
   price,
   description,
-  imageUrl
+  imageUrl,
+  userId
 ) {
   try {
-    const updatedProduct = await this.findByIdAndUpdate(
-      id,
+    userId = userId.toString();
+    await this.updateOne(
+      { _id: id, userId },
       { title, price, description, imageUrl },
       { new: true, runValidations: true }
     );
 
-    console.log("Updated product data:", updatedProduct); // DEBUGGING
-    return updatedProduct;
+    return;
   } catch (error) {
     throw newError(`Failed update product with ID: ${id}`, error);
   }
@@ -46,16 +47,17 @@ productSchema.statics.editProductById = async function (
 
 productSchema.statics.findProductById = async function (id) {
   try {
-    const product = await this.findById(id);
+    const product = await this.find(id);
     return product;
   } catch (error) {
     throw newError(`Failed to fetch product with ID: ${id}`, error);
   }
 };
 
-productSchema.statics.deleteProduct = async function (id) {
+productSchema.statics.deleteProduct = async function (id, userId) {
   try {
-    await this.findByIdAndDelete(id);
+    userId = userId.toString();
+    await this.deleteOne({ _id: id, userId });
   } catch (error) {
     throw newError(`Failed to delete product with ID: ${id}`, error);
   }
