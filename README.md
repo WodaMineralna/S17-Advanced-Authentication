@@ -175,6 +175,7 @@ Expected output:
 
 ## Notes
 - `.env` is ignored by Git; only `.env.example` is committed
+- If port 3000 is already in use, change the `SERVER_PORT` value in `.env`
 - **`USE_MONGODB_ATLAS`** and **`SENDGRID_DEVELOPMENT_TESTING`** environmental variables must be set to _`false`_
 - Email functionality will not work out of the box. To enable email sending, you need to create your own SendGrid account and provide an API key + Sender Email in your `.env`
 
