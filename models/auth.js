@@ -98,23 +98,24 @@ async function resetPassword(email) {
 async function validateToken(token) {
   // console.log("resetPassword token:", token); // DEBUGGING
   try {
-    const matchingUserId = await User.findOne({
+    const matchingUser = await User.findOne({
       "resetPasswordToken.token": token,
       "resetPasswordToken.expiresAt": { $gt: Date.now() },
     });
-    if (!matchingUserId) return false;
-    // console.log("matchingUserId based on resetPassword token: ", matchingUserId); // DEBUGGING
+    if (!matchingUser) return false;
+    // console.log("matchingUser based on resetPassword token: ", matchingUser); // DEBUGGING
 
-    const userId = matchingUserId._id;
-    return userId;
+    const matchingUserId = matchingUser._id;
+    const matchingUserHashedPwd = matchingUser.password;
+    return { matchingUserId, matchingUserHashedPwd };
   } catch (error) {
     throw newError("Could not validate reset password token", error);
   }
 }
 
-// * reads userId from hidden input value, checks DB for matching _id and updates password
+// * reads userId from hidden `token` value & re-validates, checks DB for matching _id based on token and updates password
 async function updatePassword(formData) {
-  const { password, confirmPassword, userId } = formData;
+  const { password, confirmPassword, token } = formData;
 
   if (
     isEmpty([password, confirmPassword]) ||
@@ -123,20 +124,35 @@ async function updatePassword(formData) {
     return [false, "Passwords cannot be empty and must match"];
 
   try {
-    const user = await User.findById(userId);
-    if (!user) return [false, "Invalid userId"];
+    // ^ re-validate token to prevent tampering and edge cases
+    const { matchingUserId, matchingUserHashedPwd } = await validateToken(
+      token
+    );
+    if (!matchingUserId)
+      return [false, "Invalid or expired password reset link", true];
 
-    const doMatch = await comparePasswords(password, user.password);
+    const doMatch = await comparePasswords(password, matchingUserHashedPwd);
     if (doMatch)
-      return [
-        false,
-        "Your new password cannot be the same as your previous password",
-      ];
+      return [false, "New password cannot match old password", false];
 
     const hashedPwd = await bcrypt.hash(password, 12);
-    user.password = hashedPwd;
-    user.resetPasswordToken = undefined;
-    await user.save();
+
+    const updated = await User.findOneAndUpdate(
+      {
+        _id: matchingUserId,
+      },
+      {
+        $set: { password: hashedPwd },
+        $unset: {
+          resetPasswordToken: {
+            token: "",
+            expiresAt: "",
+          },
+        },
+      },
+      { new: false }
+    );
+    if (!updated) return [false, "Invalid or expired link"];
 
     return [true, "Password updated succesfully!"];
   } catch (error) {

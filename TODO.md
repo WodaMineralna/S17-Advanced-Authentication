@@ -6,7 +6,7 @@ Each item will be checked off as it’s implemented.
 ---
 
 ## High Priority
-[] Switch from passing `userId` to `token` during password reset flow + re-validate token on POST to prevent tampering and for safety
+[x] Switch from passing `userId` to `token` during password reset flow + re-validate token on POST to prevent tampering and for safety
 
 ## Medium Priority
 

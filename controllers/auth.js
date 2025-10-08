@@ -88,10 +88,10 @@ exports.postResetPassword = async (req, res, next) => {
 
 exports.getResetPasswordForm = async (req, res, next) => {
   const token = req.params.token;
-  const matchingUserId = await validateToken(token);
+  const { matchingUserId } = await validateToken(token);
 
   if (matchingUserId === false) {
-    req.flash("error", "Invalid or expired password reset link.");
+    req.flash("error", "Invalid or expired password reset link");
     return res.redirect("/login");
   }
 
@@ -99,22 +99,23 @@ exports.getResetPasswordForm = async (req, res, next) => {
     path: "/form-reset-password",
     pageTitle: "Reset Password Form",
     errorMessage: req.flash("error"),
-    userId: matchingUserId,
+    token,
   });
 };
 
 exports.postResetPasswordForm = async (req, res, next) => {
-  const { password, confirmPassword, userId } = req.body;
-  const [didSucceed, message] = await updatePassword({
+  const { password, confirmPassword, token } = req.body;
+  const [didSucceed, message, toLogin] = await updatePassword({
     password,
     confirmPassword,
-    userId,
+    token,
   });
 
   message || "No message";
 
   if (didSucceed === false) {
     req.flash("error", message);
+    if (toLogin === true) return res.redirect("/login");
     return res.redirect(req.get("Referer") || "/");
   }
 
