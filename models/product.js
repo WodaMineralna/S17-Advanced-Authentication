@@ -47,7 +47,7 @@ productSchema.statics.editProductById = async function (
 
 productSchema.statics.findProductById = async function (id) {
   try {
-    const product = await this.find(id);
+    const product = await this.findById(id);
     return product;
   } catch (error) {
     throw newError(`Failed to fetch product with ID: ${id}`, error);
